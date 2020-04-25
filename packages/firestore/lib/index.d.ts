@@ -97,7 +97,7 @@ export namespace FirebaseFirestoreTypes {
    * A `CollectionReference` object can be used for adding documents, getting document references, and querying for
    * documents (using the methods inherited from `Query`).
    */
-  export interface CollectionReference<T extends DocumentData = DocumentData> extends Query<T> {
+  export interface CollectionReference<T> extends Query<T> {
     /**
      * The collection's identifier.
      */
@@ -128,7 +128,7 @@ export namespace FirebaseFirestoreTypes {
      *
      * @param data An Object containing the data for the new document.
      */
-    add(data: T): Promise<DocumentReference<T>>;
+    add(data: { [key: string]: any }): Promise<DocumentReference<T>>;
 
     /**
      * Get a DocumentReference for the document within the collection at the specified path. If no
@@ -205,7 +205,7 @@ export namespace FirebaseFirestoreTypes {
    * to the location. The document at the referenced location may or may not exist. A `DocumentReference` can also be used
    * to create a `CollectionReference` to a subcollection.
    */
-  export interface DocumentReference<T extends DocumentData = DocumentData> {
+  export interface DocumentReference<T> {
     /**
      * The Firestore instance the document is in. This is useful for performing transactions, for example.
      */
@@ -429,7 +429,7 @@ export namespace FirebaseFirestoreTypes {
      * @param data A map of the fields and values for the document.
      * @param options An object to configure the set behavior.
      */
-    set(data: T, options?: SetOptions): Promise<void>;
+    set(data: { [key: string]: any }, options?: SetOptions): Promise<void>;
 
     /**
      * Updates fields in the document referred to by this `DocumentReference`. The update will fail
@@ -448,7 +448,7 @@ export namespace FirebaseFirestoreTypes {
      *
      * @param data An object containing the fields and values with which to update the document. Fields can contain dots to reference nested fields within the document.
      */
-    update(data: Partial<{ [K in keyof T]: T[K] | FieldValue }>): Promise<void>;
+    update(data: { [key: string]: any }): Promise<void>;
 
     /**
      * Updates fields in the document referred to by this DocumentReference. The update will fail if
@@ -468,6 +468,15 @@ export namespace FirebaseFirestoreTypes {
      * @param moreFieldsAndValues Additional key value pairs.
      */
     update(field: keyof T | FieldPath, value: any, ...moreFieldsAndValues: any[]): Promise<void>;
+
+    /**
+     * Applies a custom data converter to this Query, allowing you to use your own custom model objects with Firestore.
+     *
+     * When you call `get()` on the returned Query, the provided converter will convert between Firestore data and your custom type.
+     *
+     * Passing in `null` as the converter parameter removes the current converter.
+     */
+    withConverter<U>(converter: FirestoreDataConverter<U> | null): DocumentReference<U>;
   }
 
   /**
@@ -509,7 +518,7 @@ export namespace FirebaseFirestoreTypes {
      * console.log('User', user.data());
      * ```
      */
-    data(): T | undefined;
+    data(): { [key: string]: any } | undefined;
 
     /**
      * Retrieves the field specified by fieldPath. Returns undefined if the document or field doesn't exist.
@@ -571,7 +580,7 @@ export namespace FirebaseFirestoreTypes {
      * }
      * ```
      */
-    data(): T;
+    data(): { [key: string]: any };
   }
 
   /**
@@ -1244,7 +1253,37 @@ export namespace FirebaseFirestoreTypes {
      * @param value The comparison value.
      */
     where(fieldPath: keyof T | FieldPath, opStr: WhereFilterOp, value: any): Query<T>;
+
+    /**
+     * Applies a custom data converter to this Query, allowing you to use your own custom model objects with Firestore.
+     *
+     * When you call `get()` on the returned Query, the provided converter will convert between Firestore data and your custom type.
+     *
+     * Passing in `null` as the converter parameter removes the current converter.
+     */
+    withConverter<U>(converter: FirestoreDataConverter<U> | null): Query<U>;
   }
+
+  /**
+   * Converter used by withConverter() to transform user objects of type `T` into Firestore data.
+   *
+   * Using the converter allows you to specify generic type arguments when storing and retrieving objects from Firestore.
+   */
+  export type FirestoreDataConverter<T extends DocumentData = DocumentData> = {
+    /**
+     * Called by the Firestore SDK to convert Firestore data into an object of type `T`.
+     *
+     * @param snapshot The document snapshot of the incoming Firestore data to convert.
+     */
+    fromFirestore(snapshot: QueryDocumentSnapshot<T>): T;
+
+    /**
+     * Called by the Firestore SDK to convert a custom model object of type `T` into a plain Javascript object (suitable for writing directly to the Firestore database).
+     *
+     * @param data The data provided to calls to the mutation (`set`/`add`).
+     */
+    toFirestore(data: Partial<T>): DocumentData;
+  };
 
   /**
    * Filter conditions in a `Query.where()` clause are specified using the strings '<', '<=', '==', '>=', '>', 'array-contains', 'array-contains-any' or 'in'.
@@ -1382,7 +1421,7 @@ export namespace FirebaseFirestoreTypes {
      * Changes the behavior of `set()` calls to only replace the specified field paths.
      * Any field path that is not specified is ignored and remains untouched.
      */
-    mergeFields?: (string | FieldPath)[];
+    mergeFields?: string[] | FieldPath[];
   }
 
   /**
@@ -1645,9 +1684,9 @@ export namespace FirebaseFirestoreTypes {
      * @param data An object of the fields and values for the document.
      * @param options An object to configure the set behavior.
      */
-    set<T extends DocumentData = DocumentData>(
-      documentRef: DocumentReference<T>,
-      data: T,
+    set(
+      documentRef: DocumentReference,
+      data: { [key: string]: any },
       options?: SetOptions,
     ): Transaction;
 
@@ -1672,10 +1711,7 @@ export namespace FirebaseFirestoreTypes {
      * @param documentRef A reference to the document to be updated.
      * @param data An object containing the fields and values with which to update the document. Fields can contain dots to reference nested fields within the document.
      */
-    update<T extends DocumentData = DocumentData>(
-      documentRef: DocumentReference<T>,
-      data: Partial<{ [K in keyof T]: T[K] | FieldValue }>,
-    ): Transaction;
+    update(documentRef: DocumentReference, data: { [key: string]: any }): Transaction;
 
     /**
      * Updates fields in the document referred to by the provided DocumentReference. The update will fail if applied to
@@ -1706,6 +1742,9 @@ export namespace FirebaseFirestoreTypes {
       value: T[K],
       ...moreFieldsAndValues: any[]
     ): Transaction;
+
+    // TODO test passing U down? How does it effect the documents
+    withConverter<U>(converter: FirestoreDataConverter<U>): CollectionReference<U>;
   }
 
   /**
@@ -1774,9 +1813,9 @@ export namespace FirebaseFirestoreTypes {
      * @param data An object of the fields and values for the document.
      * @param options An object to configure the set behavior.
      */
-    set<T extends DocumentData = DocumentData>(
-      documentRef: DocumentReference<T>,
-      data: T,
+    set(
+      documentRef: DocumentReference,
+      data: { [key: string]: any },
       options?: SetOptions,
     ): WriteBatch;
 
@@ -1797,10 +1836,7 @@ export namespace FirebaseFirestoreTypes {
      * @param documentRef A reference to the document to be updated.
      * @param data An object containing the fields and values with which to update the document. Fields can contain dots to reference nested fields within the document.
      */
-    update<T extends DocumentData = DocumentData>(
-      documentRef: DocumentReference<T>,
-      data: Partial<{ [K in keyof T]: T[K] | FieldValue }>,
-    ): WriteBatch;
+    update(documentRef: DocumentReference, data: { [key: string]: any }): WriteBatch;
 
     /**
      * Updates fields in the document referred to by this DocumentReference. The update will fail if applied to a document that does not exist.
