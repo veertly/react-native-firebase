@@ -32,7 +32,7 @@
     "a2a": "^0.2.0",
     "babel-plugin-istanbul": "^6.0.0",
     "detox": "17.14.6",
-    "firebase-tools": "^9.16.0",
+    "firebase-tools": "^9.16.1",
     "jest-circus": "^27.0.6",
     "jest-environment-node": "^27.0.6",
     "jet": "^0.6.6-0",
