@@ -460,7 +460,7 @@ export namespace FirebaseFirestoreTypes {
      * @param data A map of the fields and values for the document.
      * @param options An object to configure the set behavior.
      */
-    set(data: { [key: string]: any }, options?: SetOptions): Promise<void>;
+    set(data: Partial<T>, options?: SetOptions): Promise<void>;
 
     /**
      * Updates fields in the document referred to by this `DocumentReference`. The update will fail
@@ -1715,9 +1715,9 @@ export namespace FirebaseFirestoreTypes {
      * @param data An object of the fields and values for the document.
      * @param options An object to configure the set behavior.
      */
-    set(
-      documentRef: DocumentReference,
-      data: { [key: string]: any },
+    set<T extends DocumentData = DocumentData>(
+      documentRef: DocumentReference<T>,
+      data: Partial<T>,
       options?: SetOptions,
     ): Transaction;
 
@@ -1844,9 +1844,9 @@ export namespace FirebaseFirestoreTypes {
      * @param data An object of the fields and values for the document.
      * @param options An object to configure the set behavior.
      */
-    set(
-      documentRef: DocumentReference,
-      data: { [key: string]: any },
+    set<T extends DocumentData = DocumentData>(
+      documentRef: DocumentReference<T>,
+      data: Partial<T>,
       options?: SetOptions,
     ): WriteBatch;
 
