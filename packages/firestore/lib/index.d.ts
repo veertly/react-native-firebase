@@ -146,6 +146,37 @@ export namespace FirebaseFirestoreTypes {
      * @param documentPath A slash-separated path to a document.
      */
     doc(documentPath?: string): DocumentReference<T>;
+
+    /**
+     * Applies a custom data converter to this CollectionReference, allowing you
+     * to use your own custom model objects with Firestore. When you call add()
+     * on the returned CollectionReference instance, the provided converter will
+     * convert between Firestore data and your custom type U.
+     *
+     * Passing in `null` as the converter parameter removes the current
+     * converter.
+     *
+     * @param converter Converts objects to and from Firestore. Passing in
+     * `null` removes the current converter.
+     * @return A CollectionReference<U> that uses the provided converter.
+     */
+     withConverter(converter: null): CollectionReference<DocumentData>;
+     /**
+      * Applies a custom data converter to this CollectionReference, allowing you
+      * to use your own custom model objects with Firestore. When you call add()
+      * on the returned CollectionReference instance, the provided converter will
+      * convert between Firestore data and your custom type U.
+      *
+      * Passing in `null` as the converter parameter removes the current
+      * converter.
+      *
+      * @param converter Converts objects to and from Firestore. Passing in
+      * `null` removes the current converter.
+      * @return A CollectionReference<U> that uses the provided converter.
+      */
+     withConverter<U>(
+       converter: FirestoreDataConverter<U>
+     ): CollectionReference<U>;
   }
 
   /**
