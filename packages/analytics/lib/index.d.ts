@@ -1493,6 +1493,15 @@ export namespace FirebaseAnalyticsTypes {
      * will clear all parameters.
      */
     setDefaultEventParameters(params?: { [key: string]: any }): Promise<void>;
+
+    /**
+     * Allows an override to the default 25 event parameter limit. This may be called
+     * for users with upgraded analytics accounts to raise the parameter limit to their actual
+     * account limit, e.g. 100
+     *
+     * @param limit
+     */
+    setEventParamLimit(limit: number): Promise<void>;
   }
 }
 

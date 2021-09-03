@@ -138,6 +138,23 @@ describe('Analytics', function () {
       );
     });
 
+    it('allows a param limit override', function () {
+      firebase.analytics().setEventParamLimit(100);
+      firebase.analytics().logEvent('invertase', Object.assign({}, new Array(100).fill(1)));
+      expect(() =>
+        firebase.analytics().logEvent('invertase', Object.assign({}, new Array(101).fill(1))),
+      ).toThrowError(
+        "firebase.analytics().logEvent(_, *) 'params' maximum number of parameters exceeded (100).",
+      );
+    });
+
+    it('errors if param limit override is not a number', function () {
+      // @ts-ignore test
+      expect(() => firebase.analytics().setEventParamLimit('not a number')).toThrowError(
+        "firebase.analytics().setEventParamLimit(*) 'limit' expected a number value.",
+      );
+    });
+
     describe('logScreenView()', function () {
       it('errors if param is not an object', function () {
         // @ts-ignore test
