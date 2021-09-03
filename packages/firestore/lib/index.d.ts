@@ -440,27 +440,27 @@ export namespace FirebaseFirestoreTypes {
     ): () => void;
 
     /**
-     * Writes to the document referred to by this DocumentReference. If the document does not yet
-     * exist, it will be created. If you pass SetOptions, the provided data can be merged into an
-     * existing document.
-     *
-     * #### Example
-     *
-     * ```js
-     * const user = firebase.firestore().doc('users/alovelace');
-     *
-     * // Set new data
-     * await user.set({
-     *   name: 'Ada Lovelace',
-     *   age: 30,
-     *   city: 'LON',
-     * });
-     * ```
+     * Writes to the document referred to by this `DocumentReference`. If the
+     * document does not yet exist, it will be created. If you pass
+     * `SetOptions`, the provided data can be merged into an existing document.
      *
      * @param data A map of the fields and values for the document.
      * @param options An object to configure the set behavior.
+     * @return A Promise resolved once the data has been successfully written
+     * to the backend (Note that it won't resolve while you're offline).
      */
-    set(data: Partial<T>, options?: SetOptions): Promise<void>;
+     set(data: Partial<T>, options: SetOptions): Promise<void>;
+
+     /**
+      * Writes to the document referred to by this `DocumentReference`. If the
+      * document does not yet exist, it will be created. If you pass
+      * `SetOptions`, the provided data can be merged into an existing document.
+      *
+      * @param data A map of the fields and values for the document.
+      * @return A Promise resolved once the data has been successfully written
+      * to the backend (Note that it won't resolve while you're offline).
+      */
+     set(data: T): Promise<void>;
 
     /**
      * Updates fields in the document referred to by this `DocumentReference`. The update will fail
@@ -1692,34 +1692,31 @@ export namespace FirebaseFirestoreTypes {
     ): Promise<DocumentSnapshot<T>>;
 
     /**
-     * Writes to the document referred to by the provided `DocumentReference`. If the document does not exist yet,
-     * it will be created. If you pass `SetOptions`, the provided data can be merged into the existing document.
-     *
-     * #### Example
-     *
-     * ```js
-     * const docRef = firebase.firestore().doc('users/alovelace');
-     *
-     * await firebase.firestore().runTransaction((transaction) => {
-     *   const snapshot = await transaction.get(docRef);
-     *   const snapshotData = snapshot.data();
-     *
-     *   return transaction.set(docRef, {
-     *     ...data,
-     *     age: 30, // new field
-     *   });
-     * });
-     * ```
+     * Writes to the document referred to by the provided `DocumentReference`.
+     * If the document does not exist yet, it will be created. If you pass
+     * `SetOptions`, the provided data can be merged into the existing document.
      *
      * @param documentRef A reference to the document to be set.
      * @param data An object of the fields and values for the document.
      * @param options An object to configure the set behavior.
+     * @return This `Transaction` instance. Used for chaining method calls.
      */
-    set<T extends DocumentData = DocumentData>(
+     set<T>(
       documentRef: DocumentReference<T>,
       data: Partial<T>,
-      options?: SetOptions,
+      options: SetOptions
     ): Transaction;
+
+    /**
+     * Writes to the document referred to by the provided `DocumentReference`.
+     * If the document does not exist yet, it will be created. If you pass
+     * `SetOptions`, the provided data can be merged into the existing document.
+     *
+     * @param documentRef A reference to the document to be set.
+     * @param data An object of the fields and values for the document.
+     * @return This `Transaction` instance. Used for chaining method calls.
+     */
+    set<T>(documentRef: DocumentReference<T>, data: T): Transaction;
 
     /**
      * Updates fields in the document referred to by the provided `DocumentReference`. The update will fail if applied
@@ -1824,31 +1821,31 @@ export namespace FirebaseFirestoreTypes {
     delete(documentRef: DocumentReference): WriteBatch;
 
     /**
-     * Writes to the document referred to by the provided DocumentReference. If the document does
-     * not exist yet, it will be created. If you pass SetOptions, the provided data can be merged
-     * into the existing document.
-     *
-     * #### Example
-     *
-     * ```js
-     * const batch = firebase.firestore().batch();
-     * const docRef = firebase.firestore().doc('users/dsmith');
-     *
-     * batch.set(docRef, {
-     *   name: 'David Smith',
-     *   age: 25,
-     * });
-     * ```
+     * Writes to the document referred to by the provided `DocumentReference`.
+     * If the document does not exist yet, it will be created. If you pass
+     * `SetOptions`, the provided data can be merged into the existing document.
      *
      * @param documentRef A reference to the document to be set.
      * @param data An object of the fields and values for the document.
      * @param options An object to configure the set behavior.
+     * @return This `WriteBatch` instance. Used for chaining method calls.
      */
-    set<T extends DocumentData = DocumentData>(
+     set<T>(
       documentRef: DocumentReference<T>,
       data: Partial<T>,
-      options?: SetOptions,
+      options: SetOptions
     ): WriteBatch;
+
+    /**
+     * Writes to the document referred to by the provided `DocumentReference`.
+     * If the document does not exist yet, it will be created. If you pass
+     * `SetOptions`, the provided data can be merged into the existing document.
+     *
+     * @param documentRef A reference to the document to be set.
+     * @param data An object of the fields and values for the document.
+     * @return This `WriteBatch` instance. Used for chaining method calls.
+     */
+    set<T>(documentRef: DocumentReference<T>, data: T): WriteBatch;
 
     /**
      * Updates fields in the document referred to by the provided DocumentReference. The update will fail if applied to a document that does not exist.
