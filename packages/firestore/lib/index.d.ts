@@ -97,7 +97,7 @@ export namespace FirebaseFirestoreTypes {
    * A `CollectionReference` object can be used for adding documents, getting document references, and querying for
    * documents (using the methods inherited from `Query`).
    */
-  export interface CollectionReference<T> extends Query<T> {
+  export interface CollectionReference<T extends DocumentData = DocumentData> extends Query<T> {
     /**
      * The collection's identifier.
      */
@@ -128,7 +128,7 @@ export namespace FirebaseFirestoreTypes {
      *
      * @param data An Object containing the data for the new document.
      */
-    add(data: { [key: string]: any }): Promise<DocumentReference<T>>;
+    add(data: T): Promise<DocumentReference<T>>;
 
     /**
      * Get a DocumentReference for the document within the collection at the specified path. If no
@@ -236,7 +236,7 @@ export namespace FirebaseFirestoreTypes {
    * to the location. The document at the referenced location may or may not exist. A `DocumentReference` can also be used
    * to create a `CollectionReference` to a subcollection.
    */
-  export interface DocumentReference<T> {
+  export interface DocumentReference<T extends DocumentData = DocumentData> {
     /**
      * The Firestore instance the document is in. This is useful for performing transactions, for example.
      */
@@ -440,27 +440,27 @@ export namespace FirebaseFirestoreTypes {
     ): () => void;
 
     /**
-     * Writes to the document referred to by this `DocumentReference`. If the
-     * document does not yet exist, it will be created. If you pass
-     * `SetOptions`, the provided data can be merged into an existing document.
+     * Writes to the document referred to by this DocumentReference. If the document does not yet
+     * exist, it will be created. If you pass SetOptions, the provided data can be merged into an
+     * existing document.
+     *
+     * #### Example
+     *
+     * ```js
+     * const user = firebase.firestore().doc('users/alovelace');
+     *
+     * // Set new data
+     * await user.set({
+     *   name: 'Ada Lovelace',
+     *   age: 30,
+     *   city: 'LON',
+     * });
+     * ```
      *
      * @param data A map of the fields and values for the document.
      * @param options An object to configure the set behavior.
-     * @return A Promise resolved once the data has been successfully written
-     * to the backend (Note that it won't resolve while you're offline).
      */
-     set(data: Partial<T>, options: SetOptions): Promise<void>;
-
-     /**
-      * Writes to the document referred to by this `DocumentReference`. If the
-      * document does not yet exist, it will be created. If you pass
-      * `SetOptions`, the provided data can be merged into an existing document.
-      *
-      * @param data A map of the fields and values for the document.
-      * @return A Promise resolved once the data has been successfully written
-      * to the backend (Note that it won't resolve while you're offline).
-      */
-     set(data: T): Promise<void>;
+    set(data: T, options?: SetOptions): Promise<void>;
 
     /**
      * Updates fields in the document referred to by this `DocumentReference`. The update will fail
@@ -479,7 +479,7 @@ export namespace FirebaseFirestoreTypes {
      *
      * @param data An object containing the fields and values with which to update the document. Fields can contain dots to reference nested fields within the document.
      */
-    update(data: { [key: string]: any }): Promise<void>;
+    update(data: Partial<{ [K in keyof T]: T[K] | FieldValue }>): Promise<void>;
 
     /**
      * Updates fields in the document referred to by this DocumentReference. The update will fail if
@@ -499,15 +499,6 @@ export namespace FirebaseFirestoreTypes {
      * @param moreFieldsAndValues Additional key value pairs.
      */
     update(field: keyof T | FieldPath, value: any, ...moreFieldsAndValues: any[]): Promise<void>;
-
-    /**
-     * Applies a custom data converter to this Query, allowing you to use your own custom model objects with Firestore.
-     *
-     * When you call `get()` on the returned Query, the provided converter will convert between Firestore data and your custom type.
-     *
-     * Passing in `null` as the converter parameter removes the current converter.
-     */
-    withConverter<U>(converter: FirestoreDataConverter<U> | null): DocumentReference<U>;
   }
 
   /**
@@ -549,7 +540,7 @@ export namespace FirebaseFirestoreTypes {
      * console.log('User', user.data());
      * ```
      */
-    data(): { [key: string]: any } | undefined;
+    data(): T | undefined;
 
     /**
      * Retrieves the field specified by fieldPath. Returns undefined if the document or field doesn't exist.
@@ -611,7 +602,7 @@ export namespace FirebaseFirestoreTypes {
      * }
      * ```
      */
-    data(): { [key: string]: any };
+    data(): T;
   }
 
   /**
@@ -1452,7 +1443,7 @@ export namespace FirebaseFirestoreTypes {
      * Changes the behavior of `set()` calls to only replace the specified field paths.
      * Any field path that is not specified is ignored and remains untouched.
      */
-    mergeFields?: string[] | FieldPath[];
+    mergeFields?: (string | FieldPath)[];
   }
 
   /**
@@ -1692,31 +1683,34 @@ export namespace FirebaseFirestoreTypes {
     ): Promise<DocumentSnapshot<T>>;
 
     /**
-     * Writes to the document referred to by the provided `DocumentReference`.
-     * If the document does not exist yet, it will be created. If you pass
-     * `SetOptions`, the provided data can be merged into the existing document.
+     * Writes to the document referred to by the provided `DocumentReference`. If the document does not exist yet,
+     * it will be created. If you pass `SetOptions`, the provided data can be merged into the existing document.
+     *
+     * #### Example
+     *
+     * ```js
+     * const docRef = firebase.firestore().doc('users/alovelace');
+     *
+     * await firebase.firestore().runTransaction((transaction) => {
+     *   const snapshot = await transaction.get(docRef);
+     *   const snapshotData = snapshot.data();
+     *
+     *   return transaction.set(docRef, {
+     *     ...data,
+     *     age: 30, // new field
+     *   });
+     * });
+     * ```
      *
      * @param documentRef A reference to the document to be set.
      * @param data An object of the fields and values for the document.
      * @param options An object to configure the set behavior.
-     * @return This `Transaction` instance. Used for chaining method calls.
      */
-     set<T>(
+    set<T extends DocumentData = DocumentData>(
       documentRef: DocumentReference<T>,
-      data: Partial<T>,
-      options: SetOptions
+      data: T,
+      options?: SetOptions,
     ): Transaction;
-
-    /**
-     * Writes to the document referred to by the provided `DocumentReference`.
-     * If the document does not exist yet, it will be created. If you pass
-     * `SetOptions`, the provided data can be merged into the existing document.
-     *
-     * @param documentRef A reference to the document to be set.
-     * @param data An object of the fields and values for the document.
-     * @return This `Transaction` instance. Used for chaining method calls.
-     */
-    set<T>(documentRef: DocumentReference<T>, data: T): Transaction;
 
     /**
      * Updates fields in the document referred to by the provided `DocumentReference`. The update will fail if applied
@@ -1739,7 +1733,10 @@ export namespace FirebaseFirestoreTypes {
      * @param documentRef A reference to the document to be updated.
      * @param data An object containing the fields and values with which to update the document. Fields can contain dots to reference nested fields within the document.
      */
-    update(documentRef: DocumentReference, data: { [key: string]: any }): Transaction;
+    update<T extends DocumentData = DocumentData>(
+      documentRef: DocumentReference<T>,
+      data: Partial<{ [K in keyof T]: T[K] | FieldValue }>,
+    ): Transaction;
 
     /**
      * Updates fields in the document referred to by the provided DocumentReference. The update will fail if applied to
@@ -1821,31 +1818,31 @@ export namespace FirebaseFirestoreTypes {
     delete(documentRef: DocumentReference): WriteBatch;
 
     /**
-     * Writes to the document referred to by the provided `DocumentReference`.
-     * If the document does not exist yet, it will be created. If you pass
-     * `SetOptions`, the provided data can be merged into the existing document.
+     * Writes to the document referred to by the provided DocumentReference. If the document does
+     * not exist yet, it will be created. If you pass SetOptions, the provided data can be merged
+     * into the existing document.
+     *
+     * #### Example
+     *
+     * ```js
+     * const batch = firebase.firestore().batch();
+     * const docRef = firebase.firestore().doc('users/dsmith');
+     *
+     * batch.set(docRef, {
+     *   name: 'David Smith',
+     *   age: 25,
+     * });
+     * ```
      *
      * @param documentRef A reference to the document to be set.
      * @param data An object of the fields and values for the document.
      * @param options An object to configure the set behavior.
-     * @return This `WriteBatch` instance. Used for chaining method calls.
      */
-     set<T>(
+    set<T extends DocumentData = DocumentData>(
       documentRef: DocumentReference<T>,
-      data: Partial<T>,
-      options: SetOptions
+      data: T,
+      options?: SetOptions,
     ): WriteBatch;
-
-    /**
-     * Writes to the document referred to by the provided `DocumentReference`.
-     * If the document does not exist yet, it will be created. If you pass
-     * `SetOptions`, the provided data can be merged into the existing document.
-     *
-     * @param documentRef A reference to the document to be set.
-     * @param data An object of the fields and values for the document.
-     * @return This `WriteBatch` instance. Used for chaining method calls.
-     */
-    set<T>(documentRef: DocumentReference<T>, data: T): WriteBatch;
 
     /**
      * Updates fields in the document referred to by the provided DocumentReference. The update will fail if applied to a document that does not exist.
@@ -1864,7 +1861,10 @@ export namespace FirebaseFirestoreTypes {
      * @param documentRef A reference to the document to be updated.
      * @param data An object containing the fields and values with which to update the document. Fields can contain dots to reference nested fields within the document.
      */
-    update(documentRef: DocumentReference, data: { [key: string]: any }): WriteBatch;
+    update<T extends DocumentData = DocumentData>(
+      documentRef: DocumentReference<T>,
+      data: Partial<{ [K in keyof T]: T[K] | FieldValue }>,
+    ): WriteBatch;
 
     /**
      * Updates fields in the document referred to by this DocumentReference. The update will fail if applied to a document that does not exist.
