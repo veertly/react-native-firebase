@@ -47,21 +47,7 @@ export default class FirestoreDocumentReference {
 
   // Returns a FirestoreDocumentSnapshot depending on whether a converter has been provided.
   _getConvertedSnapshot(data) {
-    const documentSnapshot = new FirestoreDocumentSnapshot(this._firestore, data);
-
-    if (this._converter && this._converter.fromFirestore) {
-      try {
-        return new FirestoreDocumentSnapshot(
-          this._firestore,
-          this._converter.fromFirestore(documentSnapshot),
-        );
-      } catch (e) {
-        throw new Error(
-          `firebase.firestore().doc() "withConverter.fromFirestore" threw an error: ${e.message}.`,
-        );
-      }
-    }
-
+    const documentSnapshot = new FirestoreDocumentSnapshot(this._firestore, data, this._converter);
     return documentSnapshot;
   }
 

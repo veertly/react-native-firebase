@@ -26,11 +26,14 @@ import { extractFieldPathData } from './utils';
 import { parseNativeMap } from './utils/serialize';
 
 export default class FirestoreDocumentSnapshot {
-  constructor(firestore, nativeData) {
-    this._data = parseNativeMap(firestore, nativeData.data);
-    this._metadata = new FirestoreSnapshotMetadata(nativeData.metadata);
-    this._ref = new FirestoreDocumentReference(firestore, FirestorePath.fromName(nativeData.path));
-    this._exists = nativeData.exists;
+  constructor(firestore, doc, converter) {
+    this._firestore = firestore;
+    this._data = parseNativeMap(firestore, doc.data);
+    this._metadata = new FirestoreSnapshotMetadata(doc.metadata);
+    this._ref = new FirestoreDocumentReference(firestore, FirestorePath.fromName(doc.path));
+    this._exists = doc.exists;
+    this._converter = converter;
+    this._document = doc;
   }
 
   get exists() {
@@ -49,7 +52,7 @@ export default class FirestoreDocumentSnapshot {
     return this._ref;
   }
 
-  data() {
+  data(options) {
     // TODO: ehesp: Figure out how to handle this.
     // const snapshotOptions = {};
     //
@@ -71,6 +74,11 @@ export default class FirestoreDocumentSnapshot {
     //     );
     //   }
     // }
+
+    if (this._converter) {
+      const internalSnap = new FirestoreDocumentSnapshot(this._firestore, this._document, null);
+      return this._converter.fromFirestore(internalSnap, options);
+    }
 
     return this._data;
   }

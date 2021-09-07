@@ -31,18 +31,8 @@ export default class FirestoreQuerySnapshot {
     this._source = nativeData.source;
     this._excludesMetadataChanges = nativeData.excludesMetadataChanges;
     this._changes = nativeData.changes.map($ => new FirestoreDocumentChange(firestore, $));
-    this._docs = nativeData.documents.map(data => {
-      if (converter && converter.fromFirestore) {
-        try {
-          return new FirestoreDocumentSnapshot(firestore, converter.fromFirestore(data));
-        } catch (e) {
-          throw new Error(
-            `firebase.firestore().collection() "withConverter.fromFirestore" threw an error: ${e.message}.`,
-          );
-        }
-      }
-
-      return new FirestoreDocumentSnapshot(firestore, data);
+    this._docs = nativeData.documents.map(doc => {
+      return new FirestoreDocumentSnapshot(firestore, doc, converter);
     });
     this._metadata = new FirestoreSnapshotMetadata(nativeData.metadata);
   }
