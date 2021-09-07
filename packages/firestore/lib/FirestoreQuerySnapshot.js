@@ -34,10 +34,7 @@ export default class FirestoreQuerySnapshot {
     this._docs = nativeData.documents.map(data => {
       if (converter && converter.fromFirestore) {
         try {
-          return new FirestoreDocumentSnapshot(
-            this._firestore,
-            this._converter.fromFirestore(documentSnapshot),
-          );
+          return new FirestoreDocumentSnapshot(firestore, converter.fromFirestore(data));
         } catch (e) {
           throw new Error(
             `firebase.firestore().collection() "withConverter.fromFirestore" threw an error: ${e.message}.`,

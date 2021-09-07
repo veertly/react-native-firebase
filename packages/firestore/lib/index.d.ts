@@ -160,23 +160,22 @@ export namespace FirebaseFirestoreTypes {
      * `null` removes the current converter.
      * @return A CollectionReference<U> that uses the provided converter.
      */
-     withConverter(converter: null): CollectionReference<DocumentData>;
-     /**
-      * Applies a custom data converter to this CollectionReference, allowing you
-      * to use your own custom model objects with Firestore. When you call add()
-      * on the returned CollectionReference instance, the provided converter will
-      * convert between Firestore data and your custom type U.
-      *
-      * Passing in `null` as the converter parameter removes the current
-      * converter.
-      *
-      * @param converter Converts objects to and from Firestore. Passing in
-      * `null` removes the current converter.
-      * @return A CollectionReference<U> that uses the provided converter.
-      */
-     withConverter<U>(
-       converter: FirestoreDataConverter<U>
-     ): CollectionReference<U>;
+    withConverter(converter: null): CollectionReference<DocumentData>;
+
+    /**
+     * Applies a custom data converter to this CollectionReference, allowing you
+     * to use your own custom model objects with Firestore. When you call add()
+     * on the returned CollectionReference instance, the provided converter will
+     * convert between Firestore data and your custom type U.
+     *
+     * Passing in `null` as the converter parameter removes the current
+     * converter.
+     *
+     * @param converter Converts objects to and from Firestore. Passing in
+     * `null` removes the current converter.
+     * @return A CollectionReference<U> that uses the provided converter.
+     */
+    withConverter<U>(converter: FirestoreDataConverter<U>): CollectionReference<U>;
   }
 
   /**
@@ -460,7 +459,7 @@ export namespace FirebaseFirestoreTypes {
      * @param data A map of the fields and values for the document.
      * @param options An object to configure the set behavior.
      */
-    set(data: T, options?: SetOptions): Promise<void>;
+    set(data: Partial<T>, options?: SetOptions): Promise<void>;
 
     /**
      * Updates fields in the document referred to by this `DocumentReference`. The update will fail
@@ -1708,7 +1707,7 @@ export namespace FirebaseFirestoreTypes {
      */
     set<T extends DocumentData = DocumentData>(
       documentRef: DocumentReference<T>,
-      data: T,
+      data: Partial<T>,
       options?: SetOptions,
     ): Transaction;
 
@@ -1840,7 +1839,7 @@ export namespace FirebaseFirestoreTypes {
      */
     set<T extends DocumentData = DocumentData>(
       documentRef: DocumentReference<T>,
-      data: T,
+      data: Partial<T>,
       options?: SetOptions,
     ): WriteBatch;
 
